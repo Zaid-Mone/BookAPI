@@ -60,44 +60,64 @@ namespace BookAPI.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<string>> Post(LoginDTO loginDTO)
         {
-            var user = await _appUserManager.FindByEmailAsync(loginDTO.Email);
-            if (user == null)
+            try
             {
-                return BadRequest(new { message = "User is not exist please register" });
-            }
-            var result = await _appUserManager.CheckPasswordAsync(user, loginDTO.Password);
-
-            if (result)
-            {
-                return Ok(new 
+                var user = await _appUserManager.FindByEmailAsync(loginDTO.Email);
+                if (user == null)
                 {
-                    Token = _tokenGenerator.CreateToken(user)
-                });
+                    return BadRequest(new { message = "User is not exist please register" });
+                }
+                var result = await _appUserManager.CheckPasswordAsync(user, loginDTO.Password);
+
+                if (result)
+                {
+                    return Ok(new
+                    {
+                        Token = _tokenGenerator.CreateToken(user)
+                    });
+                }
+                else
+                {
+                    return BadRequest(new { message="The Password doesn't match" });
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest();
+                return BadRequest(new { message = "Something went wrong" });
             }
+
         }
 
-        [HttpPost("register")]
+        [HttpPost("Register")]
         public async Task<ActionResult<RegisterDTO>> Post(RegisterDTO registerDTO)
         {
-            var user = new AppUser
+            try
             {
-                UserName = registerDTO.Email,
-                FirstName = registerDTO.FirstName,
-                Email = registerDTO.Email,
-                PhoneNumber = registerDTO.PhoneNumber,
-                LastName = registerDTO.LastName,
-            };
-            var check = await _appUserManager.FindByNameAsync(registerDTO.Email);
-            if (check != null)
-            {
-                return BadRequest(new { message = "sorry the email is already used" });
+                if(ModelState.IsValid)
+                {
+                    var user = new AppUser
+                    {
+                        UserName = registerDTO.Email,
+                        FirstName = registerDTO.FirstName,
+                        Email = registerDTO.Email,
+                        PhoneNumber = registerDTO.PhoneNumber,
+                        LastName = registerDTO.LastName,
+                    };
+                    var check = await _appUserManager.FindByNameAsync(registerDTO.Email);
+                    if (check != null)
+                    {
+                        return BadRequest(new { message = "sorry the email is already used" });
+                    }
+                    var result = await _appUserManager.CreateAsync(user, registerDTO.Password);
+                }
+                return Ok(new { message = "User addedd successfully" });
             }
-            var result = await _appUserManager.CreateAsync(user, registerDTO.Password);
-            return Ok(new { message = "User addedd successfully" });
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+
+
         }
     }
 }

@@ -10,11 +10,14 @@ using BookAPI.Data;
 using System.Collections.Immutable;
 using static System.Reflection.Metadata.BlobBuilder;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class AuthorController : ControllerBase
     {
         private readonly IValidator<Author> _authorValidator;

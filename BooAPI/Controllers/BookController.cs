@@ -9,11 +9,14 @@ using BooAPI.Models;
 using BookAPI.Data;
 using FluentValidation;
 using BookAPI.Validation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class BookController : ControllerBase
     {
         private readonly DataDbContext _context;
