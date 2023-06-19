@@ -29,5 +29,9 @@
     <None Include="wwwroot\index.html" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Uploads\Images\" />
+  </ItemGroup>
+
 
 </Project>

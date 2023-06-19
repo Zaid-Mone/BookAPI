@@ -11,7 +11,9 @@ using FluentValidation;
 using BookAPI.Validation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-
+using System.IO;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting.Internal;
 namespace BookAPI.Controllers
 {
     [Route("api/[controller]")]
@@ -19,13 +21,16 @@ namespace BookAPI.Controllers
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class BookController : ControllerBase
     {
+        private readonly IWebHostEnvironment _hosting;
         private readonly DataDbContext _context;
         private readonly IValidator<Book> _bookValidator;
-        public BookController(DataDbContext context, 
-            IValidator<Book> bookValidator)
+        public BookController(DataDbContext context,
+            IValidator<Book> bookValidator,
+            IWebHostEnvironment hosting)
         {
             _context = context;
             _bookValidator = bookValidator;
+            _hosting = hosting;
         }
 
         // GET: api/Book
@@ -84,7 +89,7 @@ namespace BookAPI.Controllers
 
         // POST: api/Book
         [HttpPost]
-        public async Task<ActionResult<Book>> PostBook(Book book)
+        public async Task<ActionResult<Book>> PostBook([FromForm]Book book)
         {
 
             var validationResult = await _bookValidator.ValidateAsync(book);
@@ -98,6 +103,7 @@ namespace BookAPI.Controllers
             }
 
             _context.Books.Add(book);
+            UploadImage(book);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetBook", new { id = book.Id }, book);
@@ -122,6 +128,31 @@ namespace BookAPI.Controllers
         private bool BookExists(Guid id)
         {
             return _context.Books.Any(e => e.Id == id);
+        }
+
+
+
+        private void UploadImage(Book model)
+        {
+            // API Files Uplaod Function 
+            var file = HttpContext.Request.Form.Files;
+            if (file.Count() > 0)
+            {
+                string ImageName = Guid.NewGuid().ToString() + Path.GetExtension(file[0].FileName);
+                string directoryPath = Path.Combine(_hosting.ContentRootPath, "Uploads", "Images");
+                string filePath = Path.Combine(directoryPath, ImageName);
+                var filestream = new FileStream(filePath, FileMode.Create);
+                file[0].CopyTo(filestream);
+                model.BookPDF = ImageName;
+            }
+            else if (model.BookPDF == null)
+            {
+                model.BookPDF = "card.png";
+            }
+            else
+            {
+                model.BookPDF = model.BookPDF;
+            }
         }
     }
 }
