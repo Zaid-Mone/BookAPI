@@ -2,6 +2,7 @@
 using BookAPI.Data;
 using BookAPI.DTOs;
 using BookAPI.Services;
+using BookAPI.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -71,9 +72,16 @@ namespace BookAPI.Controllers
 
                 if (result)
                 {
-                    return Ok(new
+                    //return Ok(new
+                    //{
+                    //    Token = _tokenGenerator.CreateToken(user)
+                    //});
+
+                    return Ok(new LoginResponseDTO
                     {
-                        Token = _tokenGenerator.CreateToken(user)
+                        Status = HttpContext.Response.StatusCode.ToString(),
+                        Message = ReponseStatus.ReponseStateMessage(HttpContext.Response.StatusCode),
+                        Token= _tokenGenerator.CreateToken(user)
                     });
                 }
                 else
