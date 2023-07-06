@@ -15,6 +15,7 @@ using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting.Internal;
 using BookAPI.DTOs;
+using BookAPI.Services;
 
 namespace BookAPI.Controllers
 {
@@ -26,19 +27,25 @@ namespace BookAPI.Controllers
         private readonly IWebHostEnvironment _hosting;
         private readonly DataDbContext _context;
         private readonly IValidator<Book> _bookValidator;
+        private readonly ITokenGenerator _tokenGenerator;
         public BookController(DataDbContext context,
             IValidator<Book> bookValidator,
-            IWebHostEnvironment hosting)
+            IWebHostEnvironment hosting,
+            ITokenGenerator tokenGenerator)
         {
             _context = context;
             _bookValidator = bookValidator;
             _hosting = hosting;
+            _tokenGenerator = tokenGenerator;
         }
 
         // GET: api/Book
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Book>>> GetBooks()
         {
+            var headerTokenAuth = Request.Headers["Authorization"];
+           var check= _tokenGenerator.ValidateToken(headerTokenAuth);
+            if (!check) { return BadRequest(new { message = "Something went wrong please login again ." }); }
             return await _context.Books
                 .Include(q=>q.Author)
                 .Where(q=>!q.IsDeleted)
